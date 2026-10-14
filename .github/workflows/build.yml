@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  BUILD_TYPE: RelWithDebInfo
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg-cache
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup vcpkg
+      run: |
+        git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+        C:\vcpkg\bootstrap-vcpkg.bat
+
+    - name: Cache vcpkg deps
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+        key: deps-build-se-${{ hashFiles('CMakeLists.txt','CMakePresets.json','vcpkg.json') }}
+        restore-keys: deps-build-se-
+
+    - name: Configure
+      env:
+        VCPKG_ROOT: C:\vcpkg
+      run: cmake --preset x64-windows
+
+    - name: Build
+      run: cmake --build --preset x64-windows
+
+    - name: Prepare artifact
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path "artifact/SKSE/Plugins"
+        Copy-Item "build/x64-windows/RelWithDebInfo/*.dll" -Destination "artifact/SKSE/Plugins/"
+        Copy-Item "RFABManaToStamina.ini" -Destination "artifact/SKSE/Plugins/" -ErrorAction SilentlyContinue
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: RFABManaToStamina-SE-1.5.97
+        path: artifact

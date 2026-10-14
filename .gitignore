@@ -1,0 +1,14 @@
+build/
+.vs/
+.vscode/
+.cache/
+CMakeFiles/
+CMakeCache.txt
+*.user
+*.aps
+*.ncb
+*.opensdf
+*.sdf
+*.suo
+*.VC.db
+*.VC.opendb
