@@ -176,6 +176,7 @@ namespace ManaToStamina
 			}
 
 			spell->SetFormEditorID(_togglePowerEditorID.c_str());
+			spell->SetFullName("Перенаправление магического истощения на выносливость");
 			spell->data.costOverride = 0;
 			spell->data.flags = RE::SpellItem::SpellFlag::kNone;
 			spell->data.spellType = RE::MagicSystem::SpellType::kLesserPower;
@@ -236,11 +237,19 @@ namespace ManaToStamina
 				return;
 			}
 
+			const float staminaMax = player->GetActorValueMax(RE::ActorValue::kStamina);
 			const float stamina = player->GetActorValue(RE::ActorValue::kStamina);
-			const float fromStamina = (std::min)(stamina, upkeep);
-			if (fromStamina > 0.0F) {
-				player->DamageActorValue(RE::ActorValue::kStamina, fromStamina);
-				player->RestoreActorValue(RE::ActorValue::kMagicka, fromStamina);
+
+			// Always drain stamina for the full upkeep. Mana should not be
+			// refunded; auras remain active as long as the toggle is on.
+			player->DamageActorValue(RE::ActorValue::kStamina, upkeep);
+
+			// If stamina drops to or below 10% of max, the ability loses
+			// its useful properties per RFAB's gating (which normally checks
+			// Magicka >= 10%). The plugin still burns stamina only.
+			if (staminaMax > 0.0F && (stamina / staminaMax) <= 0.10F) {
+				// No changes to RFAB's toggle behavior; it continues to run,
+				// but mana is not restored. Keep draining stamina only.
 			}
 		}
 
