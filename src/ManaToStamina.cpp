@@ -238,10 +238,28 @@ namespace ManaToStamina
 				return;
 			}
 
-			// Give back the magicka RFAB took this second so mana stays where
-			// it was; the cost is paid from stamina instead. Stamina floors at
-			// zero, so the auras keep running indefinitely.
-			player->RestoreActorValue(RE::ActorValue::kMagicka, upkeep);
+			const float stamina = player->GetActorValue(RE::ActorValue::kStamina);
+			const float staminaMax = player->GetActorValueMax(RE::ActorValue::kStamina);
+			const bool  exhausted = staminaMax > 0.0F && (stamina / staminaMax) <= 0.10F;
+
+			// RFAB boosts its supported spells' useful effects while
+			// GetActorValuePercent(Magicka) >= 0.1 and stops boosting them
+			// below that. The mod cannot edit RFAB, so stamina is mapped onto
+			// that same gate: while stamina is above 10% the mana RFAB took is
+			// refunded (mana is never spent), and once stamina falls to 10% or
+			// less magicka is held below 10%, which robs the auras of their
+			// useful properties while the drain keeps running.
+			if (exhausted) {
+				const float magicka = player->GetActorValue(RE::ActorValue::kMagicka);
+				if (magicka > 0.0F) {
+					player->DamageActorValue(RE::ActorValue::kMagicka, magicka);
+				}
+			} else {
+				player->RestoreActorValue(RE::ActorValue::kMagicka, upkeep);
+			}
+
+			// The upkeep is always paid from stamina; it floors at zero, so
+			// the auras keep running indefinitely.
 			player->DamageActorValue(RE::ActorValue::kStamina, upkeep);
 		}
 
