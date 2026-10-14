@@ -208,11 +208,12 @@ namespace ManaToStamina
 			return spell;
 		}
 
-		// One check per second, on the game thread. Reads RFAB's per-second
-		// mana upkeep and moves it onto stamina: stamina is drained first and
-		// only the part stamina could not cover is left on magicka (RFAB's own
-		// drain), which reproduces the requested "fall back to magicka when
-		// out of stamina" behaviour.
+		// One check per second, on the game thread. RFAB drains magicka by
+		// RFAB_Global_ManaDrain_Upkeep every second while its auras are up.
+		// We cannot edit RFAB, so to make the upkeep cost eat *only* stamina
+		// the plugin (1) refunds exactly that much magicka, leaving magicka
+		// untouched, and (2) takes the same amount out of stamina. Net effect
+		// on magicka is zero, on stamina it is the full upkeep.
 		void Poll()
 		{
 			if (!_enabled) {
@@ -237,20 +238,11 @@ namespace ManaToStamina
 				return;
 			}
 
-			const float staminaMax = player->GetActorValueMax(RE::ActorValue::kStamina);
-			const float stamina = player->GetActorValue(RE::ActorValue::kStamina);
-
-			// Always drain stamina for the full upkeep. Mana should not be
-			// refunded; auras remain active as long as the toggle is on.
+			// Give back the magicka RFAB took this second so mana stays where
+			// it was; the cost is paid from stamina instead. Stamina floors at
+			// zero, so the auras keep running indefinitely.
+			player->RestoreActorValue(RE::ActorValue::kMagicka, upkeep);
 			player->DamageActorValue(RE::ActorValue::kStamina, upkeep);
-
-			// If stamina drops to or below 10% of max, the ability loses
-			// its useful properties per RFAB's gating (which normally checks
-			// Magicka >= 10%). The plugin still burns stamina only.
-			if (staminaMax > 0.0F && (stamina / staminaMax) <= 0.10F) {
-				// No changes to RFAB's toggle behavior; it continues to run,
-				// but mana is not restored. Keep draining stamina only.
-			}
 		}
 
 		void OnGameTick()
