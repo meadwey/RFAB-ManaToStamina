@@ -1,8 +1,9 @@
 {
-  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
-  "name": "rfab-manatostamina",
-  "version-string": "1.0.0",
+  "name": "rfabmanatostamina",
+  "version-string": "0.1.0",
+  "description": "Redirect RFAB mana drain to stamina.",
   "dependencies": [
-    "commonlibsse-ng"
+    "rsm-binary-io",
+    "spdlog"
   ]
 }
