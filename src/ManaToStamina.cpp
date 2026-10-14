@@ -237,7 +237,7 @@ namespace ManaToStamina
 			}
 
 			const float stamina = player->GetActorValue(RE::ActorValue::kStamina);
-			const float fromStamina = std::min(stamina, upkeep);
+			const float fromStamina = (std::min)(stamina, upkeep);
 			if (fromStamina > 0.0F) {
 				player->DamageActorValue(RE::ActorValue::kStamina, fromStamina);
 				player->RestoreActorValue(RE::ActorValue::kMagicka, fromStamina);
