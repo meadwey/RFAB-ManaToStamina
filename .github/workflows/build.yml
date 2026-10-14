@@ -2,50 +2,45 @@ name: Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, master]
   pull_request:
-    branches: [ main ]
   workflow_dispatch:
-
-env:
-  BUILD_TYPE: RelWithDebInfo
-  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg-cache
 
 jobs:
   build:
+    name: Skyrim SE 1.5.97
     runs-on: windows-2022
+    env:
+      VCPKG_ROOT: C:\vcpkg
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup vcpkg
-      run: |
-        git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
-        C:\vcpkg\bootstrap-vcpkg.bat
+      - name: Show environment
+        run: |
+          cmake --version
+          vcpkg version
 
-    - name: Cache vcpkg deps
-      uses: actions/cache@v4
-      with:
-        path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-        key: deps-build-se-${{ hashFiles('CMakeLists.txt','CMakePresets.json','vcpkg.json') }}
-        restore-keys: deps-build-se-
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            build-se
+            C:\vcpkg\installed
+          key: deps-build-se-${{ hashFiles('CMakeLists.txt', 'CMakePresets.json', 'vcpkg.json') }}
+          restore-keys: |
+            deps-build-se-
 
-    - name: Configure
-      env:
-        VCPKG_ROOT: C:\vcpkg
-      run: cmake --preset x64-windows
+      - name: Configure
+        run: cmake --preset vs2022-se
 
-    - name: Build
-      run: cmake --build --preset x64-windows
+      - name: Build
+        run: cmake --build build-se --preset release-se
 
-    - name: Prepare artifact
-      shell: pwsh
-      run: |
-        New-Item -ItemType Directory -Force -Path "artifact/SKSE/Plugins"
-        Copy-Item "build/x64-windows/RelWithDebInfo/*.dll" -Destination "artifact/SKSE/Plugins/"
-        Copy-Item "RFABManaToStamina.ini" -Destination "artifact/SKSE/Plugins/" -ErrorAction SilentlyContinue
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: RFABManaToStamina-SE-1.5.97
-        path: artifact
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RFABManaToStamina-SE-1.5.97
+          path: |
+            build-se/Release/RFABManaToStamina.dll
+            RFABManaToStamina.ini

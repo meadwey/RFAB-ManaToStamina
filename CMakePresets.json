@@ -1,28 +1,27 @@
 {
   "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 19,
+    "patch": 0
+  },
   "configurePresets": [
     {
-      "name": "x64-windows",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/x64-windows",
+      "name": "vs2022-se",
+      "displayName": "Skyrim SE 1.5.97 (x64)",
+      "binaryDir": "${sourceDir}/build-se",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/x64-windows"
-      },
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "toolset": {
-        "value": "host=x64",
-        "strategy": "external"
+        "CMAKE_GENERATOR_PLATFORM": "x64",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "x64-windows",
-      "configurePreset": "x64-windows"
+      "name": "release-se",
+      "configurePreset": "vs2022-se",
+      "configuration": "Release"
     }
   ]
 }
